@@ -25,7 +25,6 @@ class FireMap extends StatefulWidget {
   State createState() => FireMapState();
 }
 
-
 class FireMapState extends State<FireMap> {
   GoogleMapController mapController;
   Location location = new Location();
@@ -39,15 +38,47 @@ class FireMapState extends State<FireMap> {
 
   // Subscription
   StreamSubscription subscription;
+  static CameraPosition _kGooglePlex;
 
-  build(context) {
+  Future<CameraPosition> getLocation() async {
+    var pos = await location.getLocation();
+
+    if (location != null){
+    _kGooglePlex = CameraPosition (
+      target: LatLng(pos['latitude'], pos['longitude']),
+      zoom: 18.0,
+    );
+    }else{
+    _kGooglePlex = CameraPosition(
+            target: LatLng(24.142, -110.321),
+            zoom: 15
+          );
+    }
+  print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+  print(_kGooglePlex);
+    return _kGooglePlex;
+  }
+
+  @override
+    void initState() {
+      getLocation().then((result) {
+          setState(() {
+              _kGooglePlex = result;
+          });
+      });
+    }
+
+
+  @override
+  Widget build(context) {
     return Stack(children: [
 
     GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: LatLng(24.142, -110.321),
-            zoom: 15
-          ),
+          // initialCameraPosition: CameraPosition(
+          //   target: LatLng(13.5340, 80.0020),
+          //   zoom: 16
+          // ),
+          initialCameraPosition: _kGooglePlex,
           onMapCreated: _onMapCreated,
           myLocationEnabled: true,
           mapType: MapType.hybrid, 
@@ -61,23 +92,24 @@ class FireMapState extends State<FireMap> {
           FlatButton(
             child: Icon(Icons.pin_drop, color: Colors.white),
             color: Colors.green,
-            onPressed: _addGeoPoint
+            //onPressed: _addGeoPoint
+            onPressed: _addMarker
           )
       ),
-      Positioned(
-        bottom: 50,
-        left: 10,
-        child: Slider(
-          min: 100.0,
-          max: 500.0, 
-          divisions: 4,
-          value: radius.value,
-          label: 'Radius ${radius.value}km',
-          activeColor: Colors.green,
-          inactiveColor: Colors.green.withOpacity(0.2),
-          onChanged: _updateQuery,
-        )
-      )
+      // Positioned(
+      //   bottom: 50,
+      //   left: 10,
+      //   child: Slider(
+      //     min: 100.0,
+      //     max: 500.0, 
+      //     divisions: 4,
+      //     value: radius.value,
+      //     label: 'Radius ${radius.value}km',
+      //     activeColor: Colors.green,
+      //     inactiveColor: Colors.green.withOpacity(0.2),
+      //     onChanged: _updateQuery,
+      //   )
+      // )
     ]);
   }
 
@@ -89,11 +121,13 @@ class FireMapState extends State<FireMap> {
     });
   }
 
-  _addMarker() {
+  _addMarker() async {
+    var pos = await location.getLocation();
     var marker = MarkerOptions(
-      position: mapController.cameraPosition.target,
+      //position: mapController.cameraPosition.target,
+      position: LatLng(pos['latitude'], pos['longitude']),
       icon: BitmapDescriptor.defaultMarker,
-      infoWindowText: InfoWindowText('Magic Marker', '🍄🍄🍄')
+      infoWindowText: InfoWindowText("Current Location", '')
     );
 
     mapController.addMarker(marker);
@@ -131,7 +165,6 @@ class FireMapState extends State<FireMap> {
           icon: BitmapDescriptor.defaultMarker,
           infoWindowText: InfoWindowText('Magic Marker', '$distance kilometers from query center')
         );
-
 
         mapController.addMarker(marker);
     });
@@ -180,6 +213,4 @@ class FireMapState extends State<FireMap> {
     subscription.cancel();
     super.dispose();
   }
-
-
 }
