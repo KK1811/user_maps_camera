@@ -7,6 +7,10 @@ import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:async';
+import 'dart:convert';
+// import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+// import 'dart:io';
 
 void main() => runApp(MyApp());
 
@@ -31,6 +35,7 @@ class FireMapState extends State<FireMap> {
 
   Firestore firestore = Firestore.instance;
   Geoflutterfire geo = Geoflutterfire();
+  int a;
 
   // Stateful Data
   BehaviorSubject<double> radius = BehaviorSubject(seedValue: 100.0);
@@ -90,10 +95,21 @@ class FireMapState extends State<FireMap> {
           right: 10,
           child: 
           FlatButton(
-            child: Icon(Icons.pin_drop, color: Colors.white),
-            color: Colors.green,
+            child: Icon(Icons.play_arrow, color: Colors.white),
+            color: Colors.blue,
             //onPressed: _addGeoPoint
-            onPressed: _addMarker
+            onPressed: repeat
+          )
+      ),
+         Positioned(
+          bottom: 10,
+          right: 10,
+          child: 
+          FlatButton(
+            child: Icon(Icons.stop, color: Colors.white),
+            color: Colors.blue,
+            onPressed: stop
+            //onPressed: _addMarker
           )
       ),
       // Positioned(
@@ -132,6 +148,38 @@ class FireMapState extends State<FireMap> {
 
     mapController.addMarker(marker);
   }
+  
+  _addMarker1() async {
+    var pos = await location.getLocation();
+    var marker = MarkerOptions(
+      //position: mapController.cameraPosition.target,
+      position: LatLng(pos['latitude'], pos['longitude']),
+      icon: BitmapDescriptor.defaultMarker,
+      infoWindowText: InfoWindowText("Current Location", '')
+    );
+
+    mapController.addMarker(marker);
+  }
+
+
+  void repeat() {
+    a = 1;
+    Timer.periodic(new Duration(seconds: 10), (timer){
+      _addMarker1();
+      _test();
+      //a++;
+      print("jhvjhmvjhvjhvjhvhm+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      if(a == 7){ timer.cancel();}}
+    );
+  }
+
+  void stop(){
+    a = 7;
+  }
+
+  void _test(){
+    print("testing");
+  }
 
   _animateToUser() async {
     var pos = await location.getLocation();
@@ -147,6 +195,9 @@ class FireMapState extends State<FireMap> {
   // Set GeoLocation Data
   Future<DocumentReference> _addGeoPoint() async {
     var pos = await location.getLocation();
+    double lat = pos['latitude'];
+    double lon = pos['longitude'];
+    _saveData(new location1(lat, lon));
     GeoFirePoint point = geo.point(latitude: pos['latitude'], longitude: pos['longitude']);
     return firestore.collection('locations').add({ 
       'position': point.data,
@@ -212,5 +263,34 @@ class FireMapState extends State<FireMap> {
   dispose() {
     subscription.cancel();
     super.dispose();
+  }
+
+  var jsonCodec = const JsonCodec(); 
+
+  _saveData(location1 _location1) async {
+    var json = jsonCodec.encode(_location1);
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++json = $json");
+
+    var url = "https://flutter-maps-1553606423657.firebaseio.com/location.json";
+    //var httpClient = createHttpClient();
+    // http.post(url, body: json).then((response){
+    //   print("status: ${response.statusCode}");
+    //   print("body: ${response.body}");
+    // });
+    var response = await http.post(url, body: json);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+  }
+}
+
+
+
+class location1{
+  double lat,lon;
+  
+  location1(this.lat, this.lon);
+
+  Map toJson(){
+    return {"latitute": lat, "longitude": lon};
   }
 }
