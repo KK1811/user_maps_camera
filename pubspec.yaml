@@ -17,14 +17,19 @@ dependencies:
     sdk: flutter
 
   http: ^0.12.0+2
-  firebase_core: ^0.3.4
-  cloud_firestore: ^0.9.13+1
-  firebase_auth: ^0.6.2+1
+  firebase_core: ^0.2.5+1
+  cloud_firestore: ^0.8.2+3
+  firebase_auth: ^0.7.0
   firebase_database: ^1.0.5
+  camera: ^0.2.9
+  path_provider: ^0.4.1
+  video_player: ^0.9.0
+  image_picker: ^0.4.12
+  firebase_storage: ^1.0.4
 
   rxdart: ^0.20.0
 
-  geoflutterfire: ^2.0.2
+  geoflutterfire: ^1.0.2
 
   location: 1.4.1
   google_maps_flutter: ^0.2.0
